@@ -4,20 +4,21 @@
       <button class="justify-center px-6 py-3.5 my-auto text-base font-medium leading-6 text-white whitespace-nowrap bg-red-700 rounded-lg shadow-sm max-md:px-5">
         Upload
       </button>
-      <img :src="user?.profile_picture_url" class="aspect-square w-[60px]" alt="User profile" />
+      <img :src="profilePictureUrl" class="aspect-square w-[60px]" alt="User profile" />
     </div>
   </header>
 </template>
 
 <script setup>
-import { useUserStore } from '@/stores/user';
-import { computed, onMounted } from 'vue';
+import {useUserStore} from '@/stores/user';
+import {computed, onMounted} from 'vue';
 
 const userStore = useUserStore();
 
 const user = computed(() => userStore.user);
-
-console.log('User data in component:', user);
+const profilePictureUrl = computed(() => {
+  return user.value?.profilePictureLocation;
+});
 
 onMounted(async () => {
   console.log('Component mounted, fetching user data...');

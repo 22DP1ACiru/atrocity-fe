@@ -1,85 +1,3 @@
-<script>
-import api, { getCsrfToken } from '@/api';
-import { useRouter, useRoute } from 'vue-router';
-
-export default {
-  name: 'PageAuthView',
-  data() {
-    return {
-      isSignUp: true, // Flag to toggle between signup and login form
-      signupForm: {
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: ''
-      },
-      loginForm: {
-        email: '',
-        password: ''
-      },
-      error: '' // Error message to be displayed
-    };
-  },
-  setup() {
-    const router = useRouter();
-    const route = useRoute();
-
-    // Check the query parameter and set the initial form state
-    const isLoginMode = route.query.mode === 'login';
-
-    return { router, isLoginMode };
-  },
-  methods: {
-    toggleForm() {
-      // Toggle between signup and login form
-      this.isSignUp = !this.isSignUp;
-      // Reset error message
-      this.error = '';
-    },
-    async handleSubmit() {
-      this.error = '';
-      try {
-        await getCsrfToken(); // Get CSRF token for security
-        if (this.isSignUp) {
-          await this.signUp();
-        } else {
-          await this.logIn();
-        }
-      } catch (error) {
-        this.error = error.response.data.message || 'An error occurred';
-      }
-    },
-    async signUp() {
-      const { email, username, password, confirmPassword } = this.signupForm;
-      if (password !== confirmPassword) {
-        this.error = 'Passwords do not match';
-        return;
-      }
-      const response = await api.post('api/register', {
-        email,
-        username,
-        password,
-        password_confirmation: confirmPassword
-      });
-      const token = response.data.token;
-      localStorage.setItem('token', token); // Store the token
-      await this.router.push('/home'); // Redirect to home route on successful signup
-    },
-    async logIn() {
-      const { email, password } = this.loginForm;
-      const response = await api.post('api/login', { email, password });
-      const token = response.data.token;
-      localStorage.setItem('token', token); // Store the token
-      await this.router.push('/home'); // Redirect to home route on successful login
-    }
-  },
-  created() {
-    // Set initial form mode based on query parameter
-    this.isSignUp = !this.isLoginMode;
-  }
-};
-</script>
-
 <template>
   <section class="absolute inset-0 flex justify-center py-20 text-white bg-neutral-950 max-md:px-5">
     <transition name="fade" mode="out-in">
@@ -200,6 +118,96 @@ export default {
     </transition>
   </section>
 </template>
+
+<script>
+import api, { getCsrfToken } from '@/api';
+import { useRouter, useRoute } from 'vue-router';
+
+export default {
+  name: 'PageAuthView',
+  data() {
+    return {
+      isSignUp: true, // Flag to toggle between signup and login form
+      signupForm: {
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: ''
+      },
+      loginForm: {
+        email: '',
+        password: ''
+      },
+      error: '' // Error message to be displayed
+    };
+  },
+  setup() {
+    const router = useRouter();
+    const route = useRoute();
+
+    // Check the query parameter and set the initial form state
+    const isLoginMode = route.query.mode === 'login';
+
+    return {router, isLoginMode};
+  },
+  methods: {
+    toggleForm() {
+      // Toggle between signup and login form
+      this.isSignUp = !this.isSignUp;
+      // Reset error message
+      this.error = '';
+    },
+    async handleSubmit() {
+      this.error = '';
+      try {
+        await getCsrfToken(); // Get CSRF token for security
+        if (this.isSignUp) {
+          await this.signUp();
+        } else {
+          await this.logIn();
+        }
+      } catch (error) {
+        this.error = error.response?.data?.message || 'An error occurred';
+      }
+    },
+    async signUp() {
+      const {email, username, password, confirmPassword} = this.signupForm;
+      if (password !== confirmPassword) {
+        this.error = 'Passwords do not match';
+        return;
+      }
+      try {
+        const response = await api.post('api/register', {
+          email,
+          username,
+          password,
+          password_confirmation: confirmPassword
+        });
+        const token = response.data.access_token;
+        localStorage.setItem('token', token); // Store the token
+        await this.router.push('/home'); // Redirect to home route on successful signup
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Registration failed';
+      }
+    },
+    async logIn() {
+      const {email, password} = this.loginForm;
+      try {
+        const response = await api.post('api/login', {email, password});
+        const token = response.data.access_token;
+        localStorage.setItem('token', token); // Store the token
+        await this.router.push('/home'); // Redirect to home route on successful login
+      } catch (error) {
+        this.error = error.response?.data?.message || 'Login failed';
+      }
+    }
+  },
+  created() {
+    // Set initial form mode based on query parameter
+    this.isSignUp = !this.isLoginMode;
+  }
+};
+</script>
 
 <style scoped>
 .fade-enter-active,
